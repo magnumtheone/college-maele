@@ -1,0 +1,437 @@
+{% load static %} 
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Galerie - Collège Maele</title>
+  <link rel="icon" type="image/png" href="{% static 'blog/Images/oiseaux.jpeg' %}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    .card{background:#fff;border-radius:1rem;box-shadow:0 10px 15px -3px rgba(0,0,0,.08);border:1px solid rgba(0,0,0,.04);}
+    .btn{display:inline-flex;align-items:center;justify-content:center;border-radius:0.75rem;font-weight:600;transition:transform .2s,box-shadow .2s,background-color .2s,color .2s;}
+    .btn-primary{background-image:linear-gradient(90deg,#2563eb,#1e3a8a);color:#fff;box-shadow:0 10px 15px -3px rgb(37 99 235 / .25);}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 20px 25px -5px rgb(30 58 138 / .25);}
+    .btn-outline{background:#fff;color:#1e40af;border:1px solid rgba(30,64,175,.25);}
+    .btn-outline:hover{background:#eff6ff;}
+    .chip{display:inline-flex;align-items:center;gap:.375rem;border:1px solid rgba(30,58,138,.18);color:#1e3a8a;background:#fff;border-radius:9999px;padding:.375rem .75rem;font-size:.75rem;font-weight:600;}
+    .chip.active{background:#1e3a8a;color:#fff;border-color:#1e3a8a;}
+    .grid-thumb a,.grid-thumb button{position:relative;overflow:hidden;border-radius:0.75rem;box-shadow:0 4px 10px -4px rgba(0,0,0,.15);outline-offset:2px}
+    .grid-thumb img{transition:transform .25s ease;}
+    .grid-thumb a:hover img,.grid-thumb button:hover img{transform:scale(1.03);}
+    .skeleton{position:relative;overflow:hidden;background:#eef2ff;border-radius:0.75rem}
+    .skeleton::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:shimmer 1.2s infinite;}
+    @keyframes shimmer{100%{transform:translateX(100%)}}
+    .lightbox-backdrop{transition:opacity .2s ease;}
+    .lb-zoom{transition:transform .25s ease}
+    /* Progress bar styling */
+    .progress-wrap { position: fixed; left: 0; right: 0; top: 0; height: 4px; z-index: 60; pointer-events: none; }
+    .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg,#2563eb,#1e40af); transform-origin: 0 50%; transition: width .12s linear; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+  <div class="progress-wrap" aria-hidden="true"><div id="progressBar" class="progress-bar"></div></div>
+  <!-- HEADER -->
+  <header class="bg-white shadow py-4 mb-6">
+    <div class="container mx-auto px-6 flex items-center justify-between">
+      <a href="{% url 'accueil' %}" class="flex items-center gap-3">
+        <img src="{% static 'blog/Images/oiseaux.jpeg' %}" alt="Logo" class="w-10 h-10 rounded-full object-cover">
+        <span class="font-bold text-xl text-blue-700">Collège Maele</span>
+      </a>
+      <nav class="space-x-4 hidden md:flex">
+        <a href="{% url 'accueil' %}" class="text-gray-600 hover:text-blue-700">Accueil</a>
+        <a href="{% url 'professeurs' %}" class="text-gray-600 hover:text-blue-700">Professeurs</a>
+        <a href="#galerie" class="text-gray-600 hover:text-blue-700">Galerie</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-6">
+    <!-- INTRO -->
+    <section class="mb-6">
+      <h1 class="text-3xl font-extrabold text-blue-900">Galerie</h1>
+      <p class="text-gray-600">Parcourez nos <strong>photos</strong> et <strong>vidéos</strong> : événements, vie scolaire et moments marquants.</p>
+    </section>
+
+    <!-- BARRE D’OUTILS : recherche / tags / type / année / tri -->
+    <section class="card p-4 md:p-6 mb-6" aria-label="Filtres de la galerie">
+      <div class="grid md:grid-cols-5 gap-4">
+        <!-- Recherche -->
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
+          <div class="relative">
+            <input id="searchInput" type="text" placeholder="Titre, légende, tag…"
+              class="w-full rounded-xl border border-gray-300/80 bg-white px-4 py-3 pr-10 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30">
+            <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          </div>
+        </div>
+        <!-- Type -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+          <select id="typeSelect" class="w-full rounded-xl border border-gray-300/80 bg-white px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30">
+            <option value="all">Tout</option>
+            <option value="photo">Photos</option>
+            <option value="video">Vidéos</option>
+          </select>
+        </div>
+        <!-- Année -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Année</label>
+          <select id="yearSelect" class="w-full rounded-xl border border-gray-300/80 bg-white px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30">
+            <option value="">Toutes</option>
+            <!-- options injectées en JS -->
+          </select>
+        </div>
+        <!-- Tri -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Trier par</label>
+          <select id="sortSelect" class="w-full rounded-xl border border-gray-300/80 bg-white px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30">
+            <option value="date_desc">Plus récent</option>
+            <option value="date_asc">Plus ancien</option>
+            <option value="caption_asc">Légende (A → Z)</option>
+            <option value="caption_desc">Légende (Z → A)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tags -->
+      <div class="mt-4">
+        <p class="text-sm font-medium text-gray-700 mb-2">Tags</p>
+        <div id="chipsRow" class="flex flex-wrap gap-2"></div>
+      </div>
+
+      <!-- Résumé -->
+      <div class="mt-4 flex items-center justify-between text-sm text-gray-600">
+        <span id="resultCount">—</span>
+        <button id="resetBtn" class="btn btn-outline px-4 py-2"><i class="fa-solid fa-rotate-left mr-2"></i>Réinitialiser</button>
+      </div>
+    </section>
+
+    <!-- GRILLES -->
+    <section id="galerie" class="mb-16">
+      <div class="card p-4 md:p-6">
+        <!-- PHOTOS -->
+        <div id="grid-photos" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 grid-thumb mb-6">
+          {% for img in images %}
+          <button type="button"
+                  class="thumb block focus:outline-none"
+                  data-type="photo"
+                  data-full="{% static img.file %}"
+                  data-thumb="{% static img.file %}"
+                  data-caption="{{ img.caption }}"
+                  data-tags="{% if img.tags %}{% for t in img.tags %}{{ t }}{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}"
+                  data-date="{% if img.date %}{{ img.date|date:'Y-m-d' }}{% endif %}">
+            <img loading="lazy" src="{% static img.file %}" alt="{{ img.caption }}" class="w-full h-44 object-cover rounded">
+            <span class="absolute left-2 bottom-2 text-white text-xs bg-black/50 px-2 py-1 rounded">{{ img.caption }}</span>
+          </button>
+          {% empty %}
+          <!-- squelettes si pas d'images -->
+          {% for i in "12345678" %}
+          <div class="skeleton w-full h-44"></div>
+          {% endfor %}
+          {% endfor %}
+        </div>
+
+        <!-- VIDÉOS (même logique filtrage) -->
+        <div id="grid-videos" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 grid-thumb">
+          {% for vid in videos %}
+          <button type="button"
+                  class="thumb block focus:outline-none"
+                  data-type="video"
+                  data-full="{% static vid.file %}"
+                  data-thumb="{% if vid.thumb %}{% static vid.thumb %}{% else %}{% static 'blog/Images/point.jpg' %}{% endif %}"
+                  data-caption="{{ vid.caption }}"
+                  data-tags="{% if vid.tags %}{% for t in vid.tags %}{{ t }}{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}"
+                  data-date="{% if vid.date %}{{ vid.date|date:'Y-m-d' }}{% endif %}">
+            <img loading="lazy" src="{% if vid.thumb %}{% static vid.thumb %}{% else %}{% static 'blog/Images/point.jpg' %}{% endif %}" alt="{{ vid.caption }}" class="w-full h-44 object-cover rounded">
+            <span class="absolute right-2 top-2 inline-flex items-center gap-1 bg-black/60 text-white text-[11px] px-2 py-1 rounded"><i class="fa-solid fa-play"></i> Vidéo</span>
+            <span class="absolute left-2 bottom-2 text-white text-xs bg-black/50 px-2 py-1 rounded">{{ vid.caption }}</span>
+          </button>
+          {% empty %}
+          <!-- Laisse vide si pas de vidéos -->
+          {% endfor %}
+        </div>
+
+        <!-- ÉTAT VIDE -->
+        <div id="emptyState" class="hidden text-center py-12">
+          <div class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-700">
+            <i class="fa-regular fa-image"></i>
+          </div>
+          <p class="mt-3 font-semibold text-blue-900">Aucun contenu ne correspond à vos filtres</p>
+          <p class="text-sm text-gray-600">Essayez d’enlever un tag ou de modifier l’année.</p>
+          <div class="mt-4">
+            <button id="clearFilters2" class="btn btn-outline px-4 py-2"><i class="fa-solid fa-broom mr-2"></i>Effacer les filtres</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- LIGHTBOX unifiée (images + vidéos) -->
+  <div id="lightbox" class="fixed inset-0 hidden items-center justify-center z-50 lightbox-backdrop bg-black/80">
+    <div class="relative max-w-[92vw] w-full p-4">
+      <button id="lb-close" class="absolute -top-10 right-0 text-white text-4xl" aria-label="Fermer">×</button>
+
+      <!-- Image -->
+      <img id="lb-img" src="" alt="" class="w-full h-auto max-h-[80vh] object-contain rounded-lg shadow-xl lb-zoom hidden">
+      <!-- Vidéo -->
+      <video id="lb-video" controls class="w-full h-auto max-h-[80vh] rounded-lg shadow-xl hidden" preload="metadata" playsinline></video>
+
+      <p id="lb-caption" class="mt-3 text-sm text-gray-200 text-center"></p>
+      <div class="absolute left-4 top-1/2 -translate-y-1/2 text-white text-3xl">
+        <button id="lb-prev" aria-label="Précédent"><i class="fas fa-chevron-left"></i></button>
+      </div>
+      <div class="absolute right-4 top-1/2 -translate-y-1/2 text-white text-3xl">
+        <button id="lb-next" aria-label="Suivant"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS (sans dépendance autre que Tailwind/FA) -->
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    /* ========= Collecte des items ========= */
+    const photoGrid = document.getElementById('grid-photos');
+    const videoGrid = document.getElementById('grid-videos');
+    const allPhotoItems = Array.from(photoGrid?.querySelectorAll('.thumb') || []);
+    const allVideoItems = Array.from(videoGrid?.querySelectorAll('.thumb') || []);
+    const allItems = [...allPhotoItems, ...allVideoItems];
+
+    /* ========= UI refs ========= */
+    const searchInput = document.getElementById('searchInput');
+    const typeSelect  = document.getElementById('typeSelect');
+    const yearSelect  = document.getElementById('yearSelect');
+    const sortSelect  = document.getElementById('sortSelect');
+    const chipsRow    = document.getElementById('chipsRow');
+    const resultCount = document.getElementById('resultCount');
+    const resetBtn    = document.getElementById('resetBtn');
+    const emptyState  = document.getElementById('emptyState');
+    const clearFilters2 = document.getElementById('clearFilters2');
+
+    /* ========= Construire Tags + Années ========= */
+    const tagSet = new Set();
+    const yearSet = new Set();
+
+    function yyyy(dateStr){
+      if(!dateStr) return "";
+      const y = (dateStr.split('-')[0] || '').trim();
+      return /^\d{4}$/.test(y) ? y : "";
+    }
+
+    allItems.forEach(it=>{
+      // tags
+      const tagsStr = (it.dataset.tags || '').trim();
+      if(tagsStr){
+        tagsStr.split(',').map(t=>t.trim()).filter(Boolean).forEach(t => tagSet.add(t));
+      }
+      // année
+      const y = yyyy(it.dataset.date || '');
+      if(y) yearSet.add(y);
+    });
+
+    const yearsSorted = Array.from(yearSet).sort((a,b)=> b.localeCompare(a)); // desc
+    yearSelect.innerHTML = '<option value="">Toutes</option>' + yearsSorted.map(y=>`<option value="${y}">${y}</option>`).join('');
+
+    // Chips
+    let activeTags = new Set();
+    function renderChips(){
+      chipsRow.innerHTML = '';
+      Array.from(tagSet).sort((a,b)=>a.localeCompare(b,'fr',{sensitivity:'base'})).forEach(tag=>{
+        const btn = document.createElement('button');
+        btn.type='button';
+        btn.className = 'chip ' + (activeTags.has(tag) ? 'active' : '');
+        btn.innerHTML = '<i class="fa-solid fa-tag text-xs"></i> '+tag;
+        btn.addEventListener('click', ()=>{
+          if(activeTags.has(tag)) activeTags.delete(tag); else activeTags.add(tag);
+          filterSortRender(true);
+          renderChips();
+        });
+        chipsRow.appendChild(btn);
+      });
+      if(activeTags.size){
+        const clr = document.createElement('button');
+        clr.type='button';
+        clr.className='chip';
+        clr.innerHTML='<i class="fa-solid fa-xmark text-xs"></i> Effacer tags';
+        clr.addEventListener('click', ()=>{ activeTags.clear(); filterSortRender(true); renderChips(); });
+        chipsRow.appendChild(clr);
+      }
+    }
+    renderChips();
+
+    /* ========= Filtrage / Tri ========= */
+    function matchesFilters(el, q, type, year, tags){
+      // type
+      if(type !== 'all' && el.dataset.type !== type) return false;
+      // search
+      const caption = (el.dataset.caption || '').toLowerCase();
+      const tagsStr = (el.dataset.tags || '').toLowerCase();
+      const hay = caption + ' ' + tagsStr;
+      if(q && !hay.includes(q)) return false;
+      // year
+      if(year){
+        const y = yyyy(el.dataset.date || '');
+        if(y !== year) return false;
+      }
+      // tags
+      if(tags && tags.size){
+        const have = new Set((el.dataset.tags || '').split(',').map(t=>t.trim()).filter(Boolean).map(t=>t.toLowerCase()));
+        for(const t of tags){
+          if(!have.has(t.toLowerCase())) return false;
+        }
+      }
+      return true;
+    }
+
+    function sortItems(list, mode){
+      const getDate = el => (el.dataset.date || '');
+      const getCaption = el => (el.dataset.caption || '');
+      switch(mode){
+        case 'date_asc':  return list.sort((a,b)=> getDate(a).localeCompare(getDate(b)));
+        case 'caption_asc': return list.sort((a,b)=> getCaption(a).localeCompare(getCaption(b),'fr',{sensitivity:'base'}));
+        case 'caption_desc': return list.sort((a,b)=> getCaption(b).localeCompare(getCaption(a),'fr',{sensitivity:'base'}));
+        case 'date_desc':
+        default: return list.sort((a,b)=> getDate(b).localeCompare(getDate(a)));
+      }
+    }
+
+    function skeletonOverlay(container){
+      if(!container) return null;
+      const overlay = document.createElement('div');
+      overlay.className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4';
+      overlay.innerHTML = Array(8).fill(0).map(()=>'<div class="skeleton w-full h-44"></div>').join('');
+      container.parentElement.style.minHeight = container.parentElement.offsetHeight+'px';
+      container.parentElement.appendChild(overlay);
+      return overlay;
+    }
+
+    function filterSortRender(withSkeleton=false){
+      const q = (searchInput.value || '').trim().toLowerCase();
+      const type = typeSelect.value;
+      const year = yearSelect.value;
+      const tags = activeTags;
+
+      let overlay = null;
+      if(withSkeleton) overlay = skeletonOverlay(document.getElementById('galerie'));
+
+      // Afficher/Cacher items
+      const visible = [];
+      allItems.forEach(el=>{
+        const ok = matchesFilters(el, q, type, year, tags);
+        el.style.display = ok ? '' : 'none';
+        if(ok) visible.push(el);
+      });
+
+      // Tri DOM dans chaque grille (on garde les items dans leur grille d’origine)
+      const visPhotos = visible.filter(el=>el.dataset.type==='photo');
+      const visVideos = visible.filter(el=>el.dataset.type==='video');
+
+      sortItems(visPhotos, sortSelect.value).forEach(el=> photoGrid.appendChild(el));
+      sortItems(visVideos, sortSelect.value).forEach(el=> videoGrid.appendChild(el));
+
+      // Compteur + états
+      const count = visible.length;
+      resultCount.textContent = count ? `${count} élément${count>1?'s':''}` : '0 élément';
+      emptyState.classList.toggle('hidden', !!count);
+
+      // Afficher/Cacher grilles selon type
+      photoGrid.parentElement.classList.remove('hidden');
+      (type==='video') ? (photoGrid.classList.add('hidden')) : photoGrid.classList.remove('hidden');
+      (type==='photo') ? (videoGrid.classList.add('hidden')) : videoGrid.classList.remove('hidden');
+
+      // Nettoyage overlay
+      if(overlay) setTimeout(()=> { overlay.remove(); photoGrid.parentElement.style.minHeight=''; }, 200);
+
+      // remonter légèrement la page pour remettre les cartes au centre de l’écran
+      document.querySelector('main').scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
+    // events
+    let t=null;
+    searchInput.addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(()=>filterSortRender(true), 180); });
+    typeSelect.addEventListener('change', ()=>filterSortRender(true));
+    yearSelect.addEventListener('change', filterSortRender);
+    sortSelect.addEventListener('change', filterSortRender);
+    resetBtn.addEventListener('click', ()=>{
+      searchInput.value=""; typeSelect.value="all"; yearSelect.value=""; sortSelect.value="date_desc"; activeTags.clear();
+      renderChips(); filterSortRender(true);
+    });
+    clearFilters2?.addEventListener('click', ()=> resetBtn.click());
+
+    // initial
+    filterSortRender();
+
+    /* ========= Lightbox unifiée ========= */
+    const lb = document.getElementById('lightbox');
+    const lbImg = document.getElementById('lb-img');
+    const lbVideo = document.getElementById('lb-video');
+    const lbCap = document.getElementById('lb-caption');
+    const lbClose = document.getElementById('lb-close');
+    const lbPrev = document.getElementById('lb-prev');
+    const lbNext = document.getElementById('lb-next');
+
+    const openables = allItems; // mêmes items (photos + vidéos)
+    let current = 0;
+
+    function openAt(i){
+      current = (i + openables.length) % openables.length;
+      const el = openables[current];
+      const type = el.dataset.type;
+      const src  = el.dataset.full;
+      const cap  = el.dataset.caption || '';
+      // reset
+      lbImg.classList.add('hidden'); lbVideo.classList.add('hidden');
+      lbImg.src = ''; lbVideo.pause(); lbVideo.src=''; lbCap.textContent = cap;
+
+      if(type==='photo'){
+        lbImg.src = src; lbImg.alt = cap; lbImg.classList.remove('hidden');
+        lbImg.style.transform='scale(.985)';
+        setTimeout(()=> lbImg.style.transform='scale(1)', 20);
+        // précharge suivante
+        const pre = new Image(); pre.src = (openables[(current+1)%openables.length].dataset.full || '');
+      }else{
+        lbVideo.src = src; lbVideo.classList.remove('hidden');
+        lbVideo.currentTime = 0; lbVideo.play().catch(()=>{});
+      }
+      lb.classList.remove('hidden'); lb.classList.add('flex');
+      document.body.style.overflow='hidden';
+    }
+    function closeLB(){
+      lb.classList.add('hidden'); lb.classList.remove('flex');
+      lbImg.src=''; lbVideo.pause(); lbVideo.src=''; lbCap.textContent='';
+      document.body.style.overflow='';
+    }
+    function step(d){ openAt(current + d); }
+
+    openables.forEach((el,idx)=> el.addEventListener('click', ()=> openAt(idx)));
+    lbClose.addEventListener('click', closeLB);
+    lb.addEventListener('click', (e)=>{ if(e.target===lb) closeLB(); });
+    lbPrev.addEventListener('click', (e)=>{ e.stopPropagation(); step(-1); });
+    lbNext.addEventListener('click', (e)=>{ e.stopPropagation(); step(1); });
+    document.addEventListener('keydown', (e)=>{
+      if(!lb.classList.contains('flex')) return;
+      if(e.key==='Escape') closeLB();
+      if(e.key==='ArrowLeft') step(-1);
+      if(e.key==='ArrowRight') step(1);
+    });
+  });
+  </script>
+  <script>
+    (function(){
+      const bar = document.getElementById('progressBar');
+      if(!bar) return;
+      function update(){
+        const doc = document.documentElement;
+        const scrollTop = window.scrollY || doc.scrollTop || 0;
+        const height = doc.scrollHeight - doc.clientHeight;
+        const pct = height > 0 ? Math.min(100, Math.max(0, (scrollTop / height) * 100)) : 0;
+        bar.style.width = pct + '%';
+      }
+      window.addEventListener('scroll', update, { passive: true });
+      window.addEventListener('resize', update);
+      update();
+    })();
+  </script>
+</body>
+</html>

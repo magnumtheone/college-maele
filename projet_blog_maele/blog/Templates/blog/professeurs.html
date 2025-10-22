@@ -1,0 +1,396 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Nos Professeurs - Collège Maele</title>
+  <link rel="icon" type="image/png" href="{% static 'blog/Images/oiseaux.jpeg' %}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Mini styles utilitaires (compatibles CDN Tailwind) -->
+  <style>
+    .card{background:#fff;border-radius:1rem;box-shadow:0 10px 15px -3px rgba(0,0,0,.08);border:1px solid rgba(0,0,0,.04);}
+    .btn{display:inline-flex;align-items:center;justify-content:center;border-radius:0.75rem;font-weight:600;transition:transform .2s ease,box-shadow .2s ease,background-color .2s ease,color .2s ease;}
+    .btn-primary{background-image:linear-gradient(90deg,#2563eb,#1e3a8a);color:#fff;box-shadow:0 10px 15px -3px rgb(37 99 235 / .25);}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 20px 25px -5px rgb(30 58 138 / .25);}
+    .btn-outline{background:#fff;color:#1e40af;border:1px solid rgba(30,64,175,.25);}
+    .btn-outline:hover{background:#eff6ff;}
+    .chip{display:inline-flex;align-items:center;gap:.375rem;border:1px solid rgba(30,58,138,.18);color:#1e3a8a;background:#fff;border-radius:9999px;padding:.375rem .75rem;font-size:.75rem;font-weight:600;}
+    .chip.active{background:#1e3a8a;color:#fff;border-color:#1e3a8a;}
+    .animated{opacity:0;transform:translateY(12px);transition:opacity .45s ease,transform .45s ease;}
+    .animated.visible{opacity:1;transform:translateY(0);}
+    .skeleton{position:relative;overflow:hidden;background:#eef2ff;}
+    .skeleton::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:shimmer 1.25s infinite;}
+    @keyframes shimmer{100%{transform:translateX(100%)}}
+    /* Lightbox transitions */
+    #gallery-modal{transition:opacity .25s ease;}
+    #gallery-modal img{transition:transform .25s ease;}
+    /* Progress bar styling */
+    .progress-wrap { position: fixed; left: 0; right: 0; top: 0; height: 4px; z-index: 60; pointer-events: none; }
+    .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg,#2563eb,#1e40af); transform-origin: 0 50%; transition: width .12s linear; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+  <!-- Progress bar (fills on scroll) -->
+  <div class="progress-wrap" aria-hidden="true"><div id="progressBar" class="progress-bar"></div></div>
+  <!-- HEADER -->
+  <header class="bg-white/90 backdrop-blur shadow sticky top-0 z-40">
+    <div class="container mx-auto px-6 py-3 flex items-center justify-between">
+      <a href="{% url 'accueil' %}" class="flex items-center gap-3">
+        <img src="{% static 'blog/Images/oiseaux.jpeg' %}" alt="Logo" class="w-10 h-10 rounded-full object-cover">
+        <span class="font-extrabold text-xl md:text-2xl text-blue-800">Collège Maele</span>
+      </a>
+      <nav class="space-x-4 hidden md:flex">
+        <a href="{% url 'accueil' %}" class="text-gray-600 hover:text-blue-700">Blog</a>
+        <a href="#prof-list" class="text-gray-600 hover:text-blue-700">Professeurs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-6">
+    <!-- INTRO -->
+    <section id="intro" class="card p-6 md:p-8 my-8 animated">
+      <div class="flex items-start justify-between gap-6 flex-wrap">
+        <div>
+          <h1 class="text-3xl md:text-4xl font-extrabold text-blue-900">Nos Professeurs</h1>
+          <p class="mt-2 text-gray-600 max-w-2xl">Découvrez l’équipe enseignante : matières, parcours, disponibilités et contacts.</p>
+        </div>
+        <a href="{% url 'accueil' %}#equipe" class="btn btn-outline px-4 py-2"><i class="fa-solid fa-people-group mr-2"></i>Retour à l’équipe</a>
+      </div>
+    </section>
+
+    <!-- BARRE D’OUTILS (client-side) -->
+    <section class="card p-4 md:p-6 mb-8 animated" aria-label="Outils de recherche et filtres">
+      <div class="grid md:grid-cols-4 gap-4">
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
+          <div class="relative">
+            <input id="searchInput" type="text" placeholder="Nom, matière, mot-clé…" class="w-full rounded-xl border border-gray-300/80 bg-white px-4 py-3 pr-10 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30">
+            <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Trier par</label>
+          <select id="sortSelect" class="w-full rounded-xl border border-gray-300/80 bg-white px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30">
+            <option value="name_asc">Nom (A → Z)</option>
+            <option value="name_desc">Nom (Z → A)</option>
+            <option value="subject">Matière</option>
+          </select>
+        </div>
+        <div class="flex items-end">
+          <button id="resetBtn" class="btn btn-outline w-full px-4 py-3"><i class="fa-solid fa-rotate-left mr-2"></i>Réinitialiser</button>
+        </div>
+      </div>
+      <!-- Chips matières (dérivés du DOM) -->
+      <div id="chipsRow" class="mt-4 flex flex-wrap gap-2"></div>
+    </section>
+
+    <!-- LISTE PROFESSEURS -->
+    <section id="prof-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+      {% for prof in professeurs %}
+      <article class="card p-6 text-center animated prof-card"
+               data-name="{{ prof.name|lower }}"
+               data-subject="{{ prof.subject }}"
+               data-keywords="{{ prof.bio|default_if_none:''|lower }}">
+        <div class="relative w-28 h-28 mx-auto -mt-2 mb-3">
+          <img loading="lazy" src="{% static prof.photo %}" alt="{{ prof.name }}" class="w-28 h-28 rounded-full mx-auto object-cover border-4 border-white shadow-md transition-transform duration-300">
+          <span class="absolute -bottom-1 -right-1 inline-flex items-center justify-center h-7 w-7 rounded-full bg-blue-600 text-white ring-2 ring-white shadow"><i class="fa-solid fa-user-graduate text-xs"></i></span>
+        </div>
+        <h3 class="font-bold text-lg text-blue-900">{{ prof.name }}</h3>
+        <p class="text-sm text-blue-600 font-medium">{{ prof.subject }}</p>
+        {% if prof.bio %}
+          <p class="mt-3 text-gray-600 text-sm line-clamp-3">{{ prof.bio }}</p>
+        {% endif %}
+        <div class="mt-4 flex items-center justify-center gap-2">
+          {% if prof.email %}
+          <a href="mailto:{{ prof.email }}" class="btn btn-outline px-3 py-2 text-sm"><i class="fa-solid fa-envelope mr-2"></i>Contacter</a>
+          {% endif %}
+          <button type="button"
+                  class="btn btn-primary px-3 py-2 text-sm quickview-btn"
+                  data-name={{ prof.name }}
+                  data-subject="{{ prof.subject }}"
+                  data-photo="{% static prof.photo %}"
+                  data-bio="{{ prof.bio|default:'' }}"
+                  data-email="{{ prof.email|default:'' }}">
+            <i class="fa-solid fa-circle-info mr-2"></i>Aperçu rapide
+          </button>
+        </div>
+      </article>
+      {% endfor %}
+      {% if professeurs|length == 0 %}
+      <div class="card p-8 text-center md:col-span-2 lg:col-span-3">
+        <p class="text-gray-600">Aucun professeur pour le moment.</p>
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- GALERIE (HTML natif + lightbox) 
+    <section id="galerie" class="mb-12">
+      <div class="card p-6 md:p-8 animated">
+        <h2 class="text-2xl md:text-3xl font-extrabold text-blue-900 mb-4">Galerie</h2>
+        <div id="photo-gallery" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <!-- Thumbs en HTML (SEO + noscript) 
+          <a href="{% static 'blog/Images/campus.jpg' %}" data-caption="Cour principale" class="group relative overflow-hidden rounded-lg shadow-md">
+            <img loading="lazy" src="{% static 'blog/Images/campus.jpg' %}" alt="Cour principale" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
+            <span class="absolute left-2 bottom-2 text-white text-xs bg-black/50 px-2 py-1 rounded">Cour</span>
+          </a>
+          <a href="{% static 'blog/Images/grotte.jpg' %}" data-caption="Activité scolaire" class="group relative overflow-hidden rounded-lg shadow-md">
+            <img loading="lazy" src="{% static 'blog/Images/grotte.jpg' %}" alt="Activité scolaire" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
+            <span class="absolute left-2 bottom-2 text-white text-xs bg-black/50 px-2 py-1 rounded">Découverte</span>
+          </a>
+          <a href="{% static 'blog/Images/facade.jpg' %}" data-caption="Façade du collège" class="group relative overflow-hidden rounded-lg shadow-md">
+            <img loading="lazy" src="{% static 'blog/Images/facade.jpg' %}" alt="Façade du collège" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
+            <span class="absolute left-2 bottom-2 text-white text-xs bg-black/50 px-2 py-1 rounded">Façade</span>
+          </a>
+          <a href="{% static 'blog/Images/primaire.jpg' %}" data-caption="Classe primaire" class="group relative overflow-hidden rounded-lg shadow-md">
+            <img loading="lazy" src="{% static 'blog/Images/primaire.jpg' %}" alt="Classe primaire" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
+            <span class="absolute left-2 bottom-2 text-white text-xs bg-black/50 px-2 py-1 rounded">Primaire</span>
+          </a>
+          <a href="{% static 'blog/Images/cours.jpg' %}" data-caption="Cours en plein air" class="group relative overflow-hidden rounded-lg shadow-md">
+            <img loading="lazy" src="{% static 'blog/Images/cours.jpg' %}" alt="Cours en plein air" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
+            <span class="absolute left-2 bottom-2 text-white text-xs bg-black/50 px-2 py-1 rounded">Cours</span>
+          </a>
+          <a href="{% static 'blog/Images/cinquantenaire.jpg' %}" data-caption="Célébration" class="group relative overflow-hidden rounded-lg shadow-md">
+            <img loading="lazy" src="{% static 'blog/Images/cinquantenaire.jpg' %}" alt="Célébration" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
+            <span class="absolute left-2 bottom-2 text-white text-xs bg-black/50 px-2 py-1 rounded">Célébration</span>
+          </a>
+          <a href="{% static 'blog/Images/point.jpg' %}" data-caption="Événement" class="group relative overflow-hidden rounded-lg shadow-md">
+            <img loading="lazy" src="{% static 'blog/Images/point.jpg' %}" alt="Événement" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
+            <span class="absolute left-2 bottom-2 text-white text-xs bg-black/50 px-2 py-1 rounded">Événement</span>
+          </a>
+          <a href="{% static 'blog/Images/drapeau.jpg' %}" data-caption="Cérémonie" class="group relative overflow-hidden rounded-lg shadow-md">
+            <img loading="lazy" src="{% static 'blog/Images/drapeau.jpg' %}" alt="Cérémonie" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
+            <span class="absolute left-2 bottom-2 text-white text-xs bg-black/50 px-2 py-1 rounded">Cérémonie</span>
+          </a>
+        </div>
+      </div>
+    </section>-->
+
+    <!-- CONTACT / RETOUR -->
+    <section id="contact" class="mb-16 text-center animated">
+      <a href="{% url 'accueil' %}" class="btn btn-outline px-5 py-3"><i class="fa-solid fa-house mr-2"></i>Retour à l’accueil</a>
+    </section>
+  </main>
+
+  <!-- MODAL APERÇU PROF -->
+  <div id="quickview-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4" aria-modal="true" role="dialog" aria-labelledby="qv-name">
+    <div class="card relative w-full max-w-lg overflow-hidden">
+      <button id="quickview-close" class="absolute top-3 right-3 text-2xl text-gray-500 hover:text-gray-800" aria-label="Fermer">×</button>
+      <div class="grid md:grid-cols-2">
+        <div class="bg-blue-50 p-6 flex items-center justify-center">
+          <img id="qv-photo" src="{% static 'blog/Images/point.jpg' %}" alt="Photo professeur" class="w-40 h-40 rounded-full object-cover border-4 border-white shadow-md">
+        </div>
+        <div class="p-6">
+          <h4 id="qv-name" class="text-xl font-bold text-blue-900">Nom du professeur</h4>
+          <p id="qv-subject" class="text-blue-600">Matière</p>
+          <p id="qv-bio" class="mt-3 text-gray-700 text-sm leading-relaxed">—</p>
+          <div class="mt-5">
+            <a id="qv-mail" href="#" class="btn btn-primary px-4 py-2 text-sm"><i class="fa-solid fa-envelope mr-2"></i>Contacter</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX GALERIE -->
+  <div id="gallery-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="relative max-w-[90vw] w-full">
+      <button id="modal-close" class="absolute -top-12 right-0 text-white text-4xl" aria-label="Fermer la photo">×</button>
+      <img id="modal-img" src="" alt="Image de la galerie" class="w-full max-w-[90vw] max-h-[75vh] rounded-lg shadow-2xl object-contain">
+      <p id="modal-caption" class="mt-3 text-sm text-gray-200 text-center"></p>
+      <button id="modal-prev" class="absolute top-1/2 -translate-y-1/2 left-4 text-white text-3xl bg-black/30 p-2 rounded-full" aria-label="Photo précédente"><i class="fas fa-chevron-left"></i></button>
+      <button id="modal-next" class="absolute top-1/2 -translate-y-1/2 right-4 text-white text-3xl bg-black/30 p-2 rounded-full" aria-label="Photo suivante"><i class="fas fa-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <!-- JS unifié -->
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Apparition progressive
+    const appear = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('visible'); appear.unobserve(e.target);} });
+    }, {threshold:.12});
+    document.querySelectorAll('.animated').forEach(el=>appear.observe(el));
+
+    /* ====== OUTILS : recherche / tri / chips ====== */
+    const searchInput = document.getElementById('searchInput');
+    const sortSelect  = document.getElementById('sortSelect');
+    const resetBtn    = document.getElementById('resetBtn');
+    const cards       = Array.from(document.querySelectorAll('.prof-card'));
+    const chipsRow    = document.getElementById('chipsRow');
+
+    // Construire les matières à partir du DOM
+    const subjects = [...new Set(cards.map(c => c.dataset.subject))].sort();
+    let activeSubject = "";
+
+    function renderChips(){
+      chipsRow.innerHTML = "";
+      subjects.forEach(s=>{
+        const a = document.createElement('button');
+        a.type="button";
+        a.className = 'chip' + (activeSubject===s ? ' active' : '');
+        a.innerHTML = '<i class="fa-solid fa-book-open text-xs"></i><span>'+s+'</span>';
+        a.addEventListener('click', ()=>{ activeSubject = (activeSubject===s ? "" : s); filterAndSort(); renderChips(); });
+        chipsRow.appendChild(a);
+      });
+      if(activeSubject){
+        const clear = document.createElement('button');
+        clear.type="button";
+        clear.className = 'chip';
+        clear.innerHTML = '<i class="fa-solid fa-xmark text-xs"></i> <span>Réinitialiser</span>';
+        clear.addEventListener('click', ()=>{ activeSubject=""; filterAndSort(); renderChips(); });
+        chipsRow.appendChild(clear);
+      }
+    }
+    renderChips();
+
+    // Squelettes (optionnel) pendant la saisie
+    let typingTimer = null;
+    function withSkeleton(fn){
+      const grid = document.getElementById('prof-list');
+      if(!grid) return fn();
+      const h = grid.offsetHeight;
+      grid.style.minHeight = h+'px';
+      grid.classList.add('relative');
+      const overlay = document.createElement('div');
+      overlay.className = 'absolute inset-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+      overlay.style.pointerEvents='none';
+      overlay.innerHTML = Array(6).fill(0).map(()=>`<div class="card p-6"><div class="w-28 h-28 rounded-full mx-auto skeleton"></div><div class="h-4 w-2/3 mx-auto mt-4 rounded skeleton"></div><div class="h-3 w-1/3 mx-auto mt-2 rounded skeleton"></div><div class="h-16 w-full mt-4 rounded skeleton"></div></div>`).join('');
+      grid.appendChild(overlay);
+      setTimeout(()=>{ fn(); overlay.remove(); grid.style.minHeight=''; }, 200);
+    }
+
+    function filterAndSort(){
+      const q = (searchInput.value || '').trim().toLowerCase();
+      // Filtrer
+      cards.forEach(c=>{
+        const name = c.dataset.name || '';
+        const subj = (c.dataset.subject || '').toLowerCase();
+        const kw   = c.dataset.keywords || '';
+        const matchQ = !q || name.includes(q) || subj.includes(q) || kw.includes(q);
+        const matchS = !activeSubject || c.dataset.subject === activeSubject;
+        c.style.display = (matchQ && matchS) ? '' : 'none';
+      });
+      // Trier (DOM reorder)
+      const grid = document.getElementById('prof-list');
+      const visible = cards.filter(c=>c.style.display!=='none');
+      let comp;
+      switch (sortSelect.value){
+        case 'name_desc': comp = (a,b)=> (a.dataset.name > b.dataset.name ? -1 : 1); break;
+        case 'subject':   comp = (a,b)=> (a.dataset.subject > b.dataset.subject ? 1 : a.dataset.subject < b.dataset.subject ? -1 : (a.dataset.name > b.dataset.name ? 1 : -1)); break;
+        default:          comp = (a,b)=> (a.dataset.name > b.dataset.name ? 1 : -1);
+      }
+      visible.sort(comp).forEach(el=>grid.appendChild(el));
+    }
+
+    searchInput.addEventListener('input', ()=>{
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(()=> withSkeleton(filterAndSort), 180);
+    });
+    sortSelect.addEventListener('change', filterAndSort);
+    resetBtn.addEventListener('click', ()=>{
+      searchInput.value = ""; activeSubject = ""; sortSelect.value = "name_asc";
+      filterAndSort(); renderChips();
+    });
+    filterAndSort();
+
+    /* ====== MODAL APERÇU PROF ====== */
+    const qvModal = document.getElementById('quickview-modal');
+    const qvClose = document.getElementById('quickview-close');
+    const qvName  = document.getElementById('qv-name');
+    const qvSubj  = document.getElementById('qv-subject');
+    const qvPhoto = document.getElementById('qv-photo');
+    const qvBio   = document.getElementById('qv-bio');
+    const qvMail  = document.getElementById('qv-mail');
+
+    document.querySelectorAll('.quickview-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        qvName.textContent  = btn.dataset.name || 'Professeur';
+        qvSubj.textContent  = btn.dataset.subject || 'Matière';
+        qvPhoto.src         = btn.dataset.photo || "{% static 'blog/Images/point.jpg' %}";
+        qvPhoto.alt         = btn.dataset.name || 'Professeur';
+        qvBio.textContent   = btn.dataset.bio || '—';
+        qvMail.href         = btn.dataset.email ? ('mailto:'+btn.dataset.email) : '#';
+        qvModal.classList.remove('hidden'); qvModal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+      });
+    });
+    function closeQV(){
+      qvModal.classList.add('hidden'); qvModal.classList.remove('flex');
+      document.body.style.overflow = '';
+    }
+    qvClose.addEventListener('click', closeQV);
+    qvModal.addEventListener('click', (e)=>{ if(e.target===qvModal) closeQV(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && qvModal.classList.contains('flex')) closeQV(); });
+
+    /* ====== LIGHTBOX GALERIE ====== */
+    const gallery   = document.getElementById('photo-gallery');
+    const gModal    = document.getElementById('gallery-modal');
+    const gImg      = document.getElementById('modal-img');
+    const gCap      = document.getElementById('modal-caption');
+    const gClose    = document.getElementById('modal-close');
+    const gPrev     = document.getElementById('modal-prev');
+    const gNext     = document.getElementById('modal-next');
+
+    if(gallery){
+      const items = Array.from(gallery.querySelectorAll('a[href]'));
+      let idx = 0;
+
+      function openAt(i){
+        idx = (i + items.length) % items.length;
+        const a = items[idx];
+        const src = a.getAttribute('href');
+        const cap = a.dataset.caption || a.querySelector('img')?.alt || '';
+        gImg.style.transform = 'scale(.98)';
+        gImg.src = src;
+        gImg.alt = cap;
+        gCap.textContent = cap;
+        gModal.classList.remove('hidden'); gModal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+        setTimeout(()=> gImg.style.transform = 'scale(1)', 20);
+        // Préchargement next/prev
+        const nextImg = new Image(); nextImg.src = items[(idx+1)%items.length].getAttribute('href');
+        const prevImg = new Image(); prevImg.src = items[(idx-1+items.length)%items.length].getAttribute('href');
+      }
+      function closeG(){
+        gModal.classList.add('hidden'); gModal.classList.remove('flex');
+        gImg.src=''; gCap.textContent=''; document.body.style.overflow='';
+      }
+      function step(d){ openAt(idx + d); }
+
+      items.forEach((a,i)=> a.addEventListener('click', (e)=>{ e.preventDefault(); openAt(i); }));
+      gClose.addEventListener('click', closeG);
+      gPrev.addEventListener('click', (e)=>{ e.stopPropagation(); step(-1); });
+      gNext.addEventListener('click', (e)=>{ e.stopPropagation(); step(1); });
+      gModal.addEventListener('click', (e)=>{ if(e.target===gModal) closeG(); });
+      document.addEventListener('keydown', (e)=>{
+        if(!gModal.classList.contains('flex')) return;
+        if(e.key==='Escape') closeG();
+        if(e.key==='ArrowLeft') step(-1);
+        if(e.key==='ArrowRight') step(1);
+      });
+    }
+  });
+  </script>
+  <script>
+    // Progress bar update
+    (function(){
+      const bar = document.getElementById('progressBar');
+      if(!bar) return;
+      function update(){
+        const doc = document.documentElement;
+        const scrollTop = window.scrollY || doc.scrollTop || 0;
+        const height = doc.scrollHeight - doc.clientHeight;
+        const pct = height > 0 ? Math.min(100, Math.max(0, (scrollTop / height) * 100)) : 0;
+        bar.style.width = pct + '%';
+      }
+      window.addEventListener('scroll', update, { passive: true });
+      window.addEventListener('resize', update);
+      // init
+      update();
+    })();
+  </script>
+</body>
+</html>
