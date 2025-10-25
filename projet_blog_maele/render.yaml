@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: college-maele
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn college_maele.wsgi"
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: college_maele.settings
