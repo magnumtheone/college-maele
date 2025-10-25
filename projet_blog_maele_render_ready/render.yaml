@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: college-maele
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn projet_blog_maele.wsgi:application"
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: projet_blog_maele.settings
+      - key: DATABASE_URL
+        fromDatabase:
+          name: college-maele-db
+          property: connectionString
+databases:
+  - name: college-maele-db
+    plan: free
