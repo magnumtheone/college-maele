@@ -3,7 +3,10 @@ services:
     name: college-maele
     env: python
     plan: free
-    buildCommand: "pip install -r requirements.txt"
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py migrate --noinput
+      python manage.py collectstatic --noinput
     startCommand: "gunicorn myblog_project.wsgi:application"
     envVars:
       - key: DJANGO_SETTINGS_MODULE
@@ -12,6 +15,8 @@ services:
         fromDatabase:
           name: college-maele-db
           property: connectionString
+
 databases:
   - name: college-maele-db
     plan: free
+    type: postgres
