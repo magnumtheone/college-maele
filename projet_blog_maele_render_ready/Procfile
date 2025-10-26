@@ -1,1 +1,0 @@
-web: gunicorn projet_blog_maele.wsgi:application
