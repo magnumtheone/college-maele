@@ -1,37 +1,53 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mon Blog Django</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
-        h1 { color: #333; }
-        .article {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .date { color: gray; font-size: 0.9em; }
-    </style>
-</head>
-<body>
-    <h1>Bienvenue sur mon Blog 📰</h1>
+{% extends 'blog/base.html' %}
+{% block title %}Articles — Collège Maele{% endblock %}
+{% block content %}
 
-{% for article in articles %}
-<div class="article">
-    {% if article.image %}
-        <img src="{{ article.image.url }}" alt="{{ article.titre }}" style="width:100%; max-height:300px; object-fit:cover; border-radius:10px;">
-    {% endif %}
-    <h2>{{ article.titre }}</h2>
-    <p class="date">Publié le {{ article.date_publication|date:"d/m/Y H:i" }} par {{ article.auteur }}</p>
-    <div>{{ article.contenu|truncatewords_html:30|safe }}</div>
-    <a href="{% url 'detail_article' slug=article.slug %}">Lire plus →</a>
-</div>
-{% empty %}
-    <p>Aucun article pour le moment.</p>
-{% endfor %}
-</body>
-</html>
+<header class="text-center mb-10">
+  <div class="inline-flex items-center gap-2 chip">
+    <i class="fa-regular fa-newspaper"></i> Actualités
+  </div>
+  <h1 class="text-3xl md:text-4xl font-extrabold text-blue-900 mt-2">Nos articles récents</h1>
+  <p class="text-gray-600 mt-2 max-w-2xl mx-auto">Découvrez les dernières nouvelles, événements et annonces du Collège Maele.</p>
+</header>
+
+{% if articles %}
+  <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    {% for article in articles %}
+    <article class="article-card bg-white rounded-xl border overflow-hidden shadow hover:shadow-lg transition group">
+      <a href="{% url 'detail_article' slug=article.slug %}" class="block focus:outline-none">
+        <div class="relative overflow-hidden">
+          {% if article.image %}
+            <img src="{{ article.image.url }}" alt="{{ article.titre }}" class="w-full h-52 object-cover transition-transform duration-300 group-hover:scale-105">
+          {% else %}
+            <div class="w-full h-52 bg-blue-100 flex items-center justify-center text-blue-600">
+              <i class="fa-solid fa-image text-3xl"></i>
+            </div>
+          {% endif %}
+          <span class="absolute left-3 top-3 chip bg-white/90 backdrop-blur border border-white/60">Blog</span>
+        </div>
+        <div class="p-5">
+          <h2 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{{ article.titre }}</h2>
+          <div class="text-sm text-gray-500 mb-3 flex items-center flex-wrap gap-x-4 gap-y-1">
+            <span class="flex items-center"><i class="fas fa-calendar-alt mr-1"></i>{{ article.date_publication|date:"d M Y" }}</span>
+            <span class="flex items-center"><i class="fas fa-user-circle mr-1"></i>{{ article.auteur }}</span>
+          </div>
+          <p class="text-gray-700 text-sm mb-4 line-clamp-3">{{ article.contenu|striptags|truncatewords:25 }}</p>
+          <div class="flex items-center justify-between">
+            <span class="text-blue-600 font-semibold group-hover:underline">Lire la suite <i class="fas fa-arrow-right ml-2"></i></span>
+          </div>
+        </div>
+      </a>
+    </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="text-center py-12">
+    <div class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-700">
+      <i class="fa-regular fa-newspaper"></i>
+    </div>
+    <p class="mt-3 font-semibold text-blue-900">Aucun article pour le moment</p>
+    <p class="text-sm text-gray-600">Revenez plus tard pour découvrir les dernières actualités.</p>
+  </div>
+{% endif %}
+
+{% endblock %}

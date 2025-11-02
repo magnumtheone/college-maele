@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Collège Maele — Actualités{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root{--cm-blue:#1e3a8a;--cm-blue2:#2563eb}
+    body{font-family:'Inter',sans-serif;background:#f7fafc;color:#1a202c}
+    .card{background:#fff;border-radius:1rem;box-shadow:0 10px 15px -3px rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.04)}
+    .chip{display:inline-flex;align-items:center;gap:.4rem;border:1px solid rgba(30,58,138,.18);color:#1e3a8a;background:#fff;border-radius:9999px;padding:.35rem .7rem;font-size:.75rem;font-weight:600}
+    .btn{display:inline-flex;align-items:center;justify-content:center;border-radius:.8rem;font-weight:700;transition:all .2s ease}
+    .btn-primary{background-image:linear-gradient(90deg,var(--cm-blue2),var(--cm-blue));color:#fff;box-shadow:0 10px 15px -3px rgb(37 99 235 /.25)}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 20px 25px -5px rgb(30 58 138 /.25)}
+  </style>
+</head>
+
+<body>
+  <!-- HEADER -->
+  <header class="bg-white shadow sticky top-0 z-50">
+    <div class="container mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3 text-gray-900">
+        <i class="fa-solid fa-graduation-cap text-blue-600 text-2xl"></i>
+        <span class="font-bold text-lg">Collège Maele</span>
+      </a>
+      <nav class="hidden md:flex gap-6 text-gray-600">
+        <a href="/" class="hover:text-blue-600">Articles</a>
+        <a href="/admin/" class="hover:text-blue-600">Admin</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-6 py-10 min-h-[70vh]">
+    {% block content %}
+    {% endblock %}
+  </main>
+
+  <footer class="bg-gray-900 text-white mt-12">
+    <div class="container mx-auto px-6 py-8 flex flex-col md:flex-row justify-between items-center">
+      <div>
+        <h4 class="font-bold text-lg">Collège Maele</h4>
+        <p class="text-gray-400 text-sm">© {{ now|date:"Y" }} Tous droits réservés.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
