@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ article.titre }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 20px; }
+        a { color: #3498db; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        article {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .date { color: gray; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <a href="/">← Retour à la liste</a>
+<article>
+    {% if article.image %}
+        <img src="{{ article.image.url }}" alt="{{ article.titre }}" style="width:100%; border-radius:10px; margin-bottom:15px;">
+    {% endif %}
+
+    <h1>{{ article.titre }}</h1>
+    <p class="date">Publié le {{ article.date_publication|date:"d/m/Y H:i" }} par {{ article.auteur }}</p>
+
+    <div>{{ article.contenu|safe }}</div>
+
+    {% if article.video %}
+        <video controls style="width:100%; margin-top:20px; border-radius:10px;">
+            <source src="{{ article.video.url }}" type="video/mp4">
+            Votre navigateur ne supporte pas la lecture de vidéos.
+        </video>
+    {% endif %}
+</article>
+
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Blog Django</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+        h1 { color: #333; }
+        .article {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .date { color: gray; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <h1>Bienvenue sur mon Blog 📰</h1>
+
+{% for article in articles %}
+<div class="article">
+    {% if article.image %}
+        <img src="{{ article.image.url }}" alt="{{ article.titre }}" style="width:100%; max-height:300px; object-fit:cover; border-radius:10px;">
+    {% endif %}
+    <h2>{{ article.titre }}</h2>
+    <p class="date">Publié le {{ article.date_publication|date:"d/m/Y H:i" }} par {{ article.auteur }}</p>
+    <div>{{ article.contenu|truncatewords_html:30|safe }}</div>
+    <a href="{% url 'detail_article' slug=article.slug %}">Lire plus →</a>
+</div>
+{% empty %}
+    <p>Aucun article pour le moment.</p>
+{% endfor %}
+</body>
+</html>
